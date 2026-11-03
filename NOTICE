@@ -1,0 +1,33 @@
+大肥鱼课表
+Copyright (C) 2026 大肥鱼课表 contributors
+
+本软件基于以下开源项目修改而来，遵循 Apache License 2.0：
+
+  WakeupSchedule_Kotlin
+  Copyright (C) YZune
+  https://github.com/YZune （作者主页；原项目仓库已不再公开）
+  Licensed under the Apache License, Version 2.0
+
+本软件与该开源项目作者名下的任何商业产品无关，未使用其商业版本的代码、资源或服务。
+Apache License 2.0 全文见本仓库根目录 LICENSE 文件。
+
+------------------------------------------------------------------------
+
+社区二创素材声明
+（仅 `github` flavor 包含；`store` flavor 已全部替换为自制素材）
+
+「github」发行版内置的壁纸与空态插画源自社区公开的「鲸鱼娘 / 蓝鲸」
+二次创作作品集，遵循 CC BY-NC-SA 4.0（署名-非商业性使用-相同方式共享）：
+
+  角色原型「溟月」           上善无形
+  女仆鲸鱼娘形象             ZipZipPipe
+  Q 版形象                   这个刀子真甜
+  插画「Ciallo～」           才不是败犬
+  原图集                     deepseek-whale-girl-gallery
+
+上述作品版权归各原作者所有。本项目仅在非商业的个人发行版中引用，
+并同样以 CC BY-NC-SA 4.0 协议共享这些衍生排版。
+若需商业使用，请联系各原作者取得授权。
+
+CC BY-NC-SA 4.0 协议全文：
+https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode

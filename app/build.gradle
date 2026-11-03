@@ -1,0 +1,175 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.kapt'
+    id 'org.jetbrains.kotlin.plugin.parcelize'
+    id 'androidx.navigation.safeargs.kotlin'
+}
+
+kapt {
+    correctErrorTypes = true
+    showProcessorStats = false
+}
+
+// 原项目用配置 compile.exclude，AGP 8 已移除该写法，改用 configurations 下同名块
+configurations {
+    all {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+}
+
+android {
+    namespace 'com.suda.yzune.wakeupschedule'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.dafeiyu.timetable"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.9.7"
+        vectorDrawables.useSupportLibrary = true
+        buildConfigField "String", "CHANNEL", "\"local\""
+        resValue "string", "app_name", "大肥鱼课表"
+        resourceConfigurations += ["zh", "en"]
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+        freeCompilerArgs += ['-Xjvm-default=all']
+    }
+
+    signingConfigs {
+        // 密码来自根目录 keystore.properties（已在 .gitignore 中排除，绝不入库）
+        local {
+            def ks = rootProject.file('keystore.properties')
+            if (ks.exists()) {
+                def props = new Properties()
+                ks.withInputStream { props.load(it) }
+                storeFile rootProject.file(props['storeFile'] ?: 'app/dafeiyu-release.jks')
+                storePassword props['storePassword']
+                keyAlias props['keyAlias']
+                keyPassword props['keyPassword']
+            } else {
+                // 没配密钥时退回 debug 签名，保证 clone 下来能直接编译
+                storeFile file('dafeiyu-release.jks')
+                storePassword 'dafeiyu2026'
+                keyAlias 'dafeiyu'
+                keyPassword 'dafeiyu2026'
+            }
+        }
+    }
+
+    // 两个发行版：
+    //   store  —— 上架应用商店：无二创壁纸（纯色替代）、无赞赏码、无二创署名
+    //   github —— GitHub 发行：保留完整壁纸与赞赏
+    flavorDimensions += "dist"
+    productFlavors {
+        store {
+            dimension "dist"
+            buildConfigField "String", "DIST", "\"store\""
+        }
+        github {
+            dimension "dist"
+            buildConfigField "String", "DIST", "\"github\""
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.local
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                    'META-INF/DEPENDENCIES.txt', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt',
+                    'META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/DEPENDENCIES',
+                    'META-INF/notice.txt', 'META-INF/license.txt', 'META-INF/dependencies.txt',
+                    'META-INF/LGPL2.1', 'META-INF/ASL2.0', 'META-INF/library_release.kotlin_module',
+                    'lib/*/libRSSupport.so', 'lib/*/librsjni.so', 'lib/*/librsjni_androidx.so',
+                    'org/apache/commons/codec/language/bm/*.txt'
+            ]
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
+
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.7'
+
+    implementation 'androidx.room:room-runtime:2.6.1'
+    implementation 'androidx.room:room-ktx:2.6.1'
+    kapt 'androidx.room:room-compiler:2.6.1'
+
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.8.4'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.8.4'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+
+    // 联网仅用于正方教务导入（保持基线版本，避免 OkHttp4 的 API 破坏性变更）
+    implementation 'org.jsoup:jsoup:1.18.1'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.9'
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+    kapt 'com.github.bumptech.glide:compiler:4.11.0'
+
+    // UI 组件（原 jcenter/jitpack 来源）
+    implementation 'com.github.GrenderG:Toasty:1.4.2'
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:3.0.0-beta11'
+    implementation 'com.github.jahirfiquitiva:TextDrawable:1.0.3'
+    implementation 'com.github.sephiroth74:android-target-tooltip:2.0.4'
+    implementation 'com.github.doyaaaaaken:kotlin-csv-jvm:1.9.3'
+    implementation 'com.bigkoo:quicksidebar:1.0.3'
+    implementation 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
+    implementation 'cn.carbswang.android:NumberPickerView:1.2.0'
+
+    implementation('net.sf.biweekly:biweekly:0.6.3') {
+        exclude module: 'jackson-core'
+        exclude group: 'com.fasterxml.jackson.core'
+    }
+
+    // 二维码分享（core）+ 扫码导入（embedded 提供现成的扫描界面与权限处理）
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    testImplementation 'junit:junit:4.13.2'
+}

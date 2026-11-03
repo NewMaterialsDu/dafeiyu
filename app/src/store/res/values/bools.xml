@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 商店版：不放赞赏码、不展示二创署名 -->
+    <bool name="show_sponsor">false</bool>
+    <bool name="show_fanart_credit">false</bool>
+</resources>

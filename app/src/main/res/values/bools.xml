@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GitHub 版：保留赞赏码与二创署名 -->
+    <bool name="show_sponsor">true</bool>
+    <bool name="show_fanart_credit">true</bool>
+</resources>
