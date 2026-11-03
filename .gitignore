@@ -1,9 +1,6 @@
 *.iml
 .gradle
 /local.properties
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
 .DS_Store
 /build
 /captures
@@ -25,3 +22,7 @@ keystore.properties
 
 # Kotlin 编译缓存
 .kotlin/
+
+# IDE 配置
+/.idea/
+*.iml
