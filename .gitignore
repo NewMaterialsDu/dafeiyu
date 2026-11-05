@@ -26,3 +26,6 @@ keystore.properties
 # IDE 配置
 /.idea/
 *.iml
+
+# 发版用的安装包（Actions 从这里取，不能忽略）
+!dist/*.apk

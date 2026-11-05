@@ -1,0 +1,43 @@
+name: Release
+
+# 打 tag（形如 v1.9.8）就自动发一个 Release，
+# 把 dist/ 下的两个安装包作为附件传上去，页面上的下载按钮指向 latest 即可长期有效。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布到哪个 tag（例如 v1.9.8）'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 检查安装包是否存在
+        run: |
+          ls -lh dist/ || true
+          test -f dist/dafeiyu-timetable-github.apk || { echo "缺少 GitHub 版安装包"; exit 1; }
+          test -f dist/dafeiyu-timetable-store.apk || { echo "缺少商店版安装包"; exit 1; }
+
+      - name: 创建 Release 并上传附件
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          echo "发布版本：$TAG"
+          # 已存在同 tag 的 Release 时先删掉，保证可重复执行
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" \
+            --title "大肥鱼课表 $TAG" \
+            --generate-notes \
+            dist/dafeiyu-timetable-github.apk \
+            dist/dafeiyu-timetable-store.apk
+          echo "完成：https://github.com/${{ github.repository }}/releases/tag/$TAG"
