@@ -81,6 +81,7 @@ class AdvancedSettingsActivity : BaseListActivity(), ColorPickerFragment.ColorPi
         items.add(CategoryItem("上课提醒", false))
         items.add(VerticalItem("功能说明", "本功能处于<b><font color='#$colorStr'>试验性阶段</font></b>。由于国产手机对系统的定制不尽相同，本功能可能会在某些手机上失效。<b><font color='#$colorStr'>开启前提：设置好课程时间 + 允许 App 后台运行（HyperOS 建议在系统设置里给「自启动 / 后台运行」权限）</font></b>。<br>理论上<b><font color='#$colorStr'>每次设置之后</font></b>需要半天以上的时间才会正常工作，理论上不会很耗电。", true))
         items.add(SwitchItem("开启上课提醒", getPrefer().getBoolean(Const.KEY_COURSE_REMIND, false)))
+        items.add(VerticalItem("测试提醒", "立刻发一条通知，验证提醒是否真的能用。\n<b><font color='#$colorStr'>收不到说明通知权限被关了</font></b>，或者系统把本应用的通知屏蔽了（国产手机常见）。"))
         items.add(SwitchItem("提醒通知常驻", getPrefer().getBoolean(Const.KEY_REMINDER_ON_GOING, false)))
         items.add(SeekBarItem("提前几分钟提醒", getPrefer().getInt(Const.KEY_REMINDER_TIME, 20), 0, 90, "分钟"))
         //items.add(SwitchItem("提醒同时将手机静音", PreferenceUtils.getBooleanFromSP(applicationContext, "silence_reminder", false)))
@@ -103,8 +104,29 @@ class AdvancedSettingsActivity : BaseListActivity(), ColorPickerFragment.ColorPi
                     }
                     com.suda.yzune.wakeupschedule.reminder.ReminderScheduler.reschedule(applicationContext)
                     item.checked = isChecked
+                    // 开了开关但系统没给通知权限时，闹钟照样会响但通知永远不显示，
+                    // 这里直接把用户引到系统设置，避免「开了却没反应」
+                    if (isChecked && android.os.Build.VERSION.SDK_INT >= 33 && checkSelfPermission(
+                                    android.Manifest.permission.POST_NOTIFICATIONS) !=
+                            android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        MaterialAlertDialogBuilder(this@AdvancedSettingsActivity)
+                                .setTitle("还差一步：通知权限")
+                                .setMessage("提醒靠系统通知显示。现在通知权限是关的，闹钟会响但你看不到任何提示。\n\n请到「系统设置 → 应用 → 大肥鱼课表 → 通知」里打开，或者点下面的按钮直接去设置。")
+                                .setPositiveButton("去设置") { _, _ ->
+                                    try {
+                                        startActivity(android.content.Intent(
+                                                android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                            putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
+                                        })
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
+                                .setNegativeButton("稍后", null)
+                                .show()
+                    }
                     if (isChecked) {
-                        mRecyclerView.longSnack("已开启。今天剩下的课会按「提前几分钟」提醒你")
+                        mRecyclerView.longSnack("已开启。点「测试提醒」可以立刻验证一次")
                     } else {
                         mRecyclerView.longSnack("已关闭上课提醒")
                     }
@@ -136,6 +158,10 @@ class AdvancedSettingsActivity : BaseListActivity(), ColorPickerFragment.ColorPi
 
     private fun onVerticalItemClick(item: VerticalItem) {
         when (item.title) {
+            "测试提醒" -> {
+                com.suda.yzune.wakeupschedule.reminder.ReminderScheduler
+                        .sendTestNotification(applicationContext)
+            }
             "主题颜色" -> {
                 ColorPickerFragment.newBuilder()
                         .setShowAlphaSlider(true)

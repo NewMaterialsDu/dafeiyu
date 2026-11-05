@@ -100,6 +100,48 @@ object ReminderScheduler {
             e.printStackTrace()
         }
     }
+
+    /**
+     * 立刻发一条通知。
+     * 用来单独验证「通知权限 → 通知渠道 → 发通知」这条链路：
+     * 点一下能收到，说明系统侧正常；收不到就是权限被关或渠道被系统屏蔽了。
+     */
+    fun sendTestNotification(context: Context) {
+        try {
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                manager.createNotificationChannel(android.app.NotificationChannel(
+                        "schedule_reminder", "课程提醒", NotificationManager.IMPORTANCE_HIGH))
+            }
+            if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(
+                            android.Manifest.permission.POST_NOTIFICATIONS) !=
+                    android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                android.widget.Toast.makeText(context,
+                        "通知权限没开：系统设置 → 应用 → 大肥鱼课表 → 通知，打开后再试",
+                        android.widget.Toast.LENGTH_LONG).show()
+                return
+            }
+            val openPi = PendingIntent.getActivity(context, 0,
+                    Intent(context, SplashActivity::class.java),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val n = NotificationCompat.Builder(context, "schedule_reminder")
+                    .setContentTitle("这是一条测试提醒")
+                    .setSubText("上课提醒")
+                    .setContentText("能收到这条，说明提醒功能正常")
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.drawable.wakeup)
+                    .setAutoCancel(true)
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setDefaults(NotificationCompat.DEFAULT_VIBRATE or NotificationCompat.DEFAULT_LIGHTS)
+                    .setContentIntent(openPi)
+                    .build()
+            manager.notify(8899, n)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.widget.Toast.makeText(context, "发送失败：" + e.message,
+                    android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
 }
 
 /** 到点弹通知 */
